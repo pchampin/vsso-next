@@ -16,3 +16,7 @@ It is composed of the following files:
   instances, demonstrating how the new VSSO could be used
 * [vsso-next-instances.drawio.svg](vsso-next-instances.drawio.svg) contains a set of
   example instances, demonstrating how the new VSSO could be used
+
+NB: the focus for the moment is on encoding the VSS hierarchy of components in a way that is both semantically correct and easier to use than the current modelling (instances vs. classes).
+
+It is totally agnostic to how static vs. dynamic properties are represented.
