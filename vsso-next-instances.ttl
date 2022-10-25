@@ -1,0 +1,103 @@
+@prefix : <https://www.w3.org/ns/vsso#>.
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#>.
+@prefix owl:  <http://www.w3.org/2002/07/owl#>.
+
+<> a owl:Ontology ;
+  rdfs:label "VSSO Next - example with instances" ;
+  owl:imports <./vsso-next.ttl>.
+
+# VSSO (partial)
+
+:body a :ComponentKind ; :vssPath "Vehicle.Body"; :kindPartOf :wholeVehicle.
+:lights a :ComponentKind ; :vssPath "Vehicle.Body.Lights"; :kindPartOf :body.
+:windshield a :ComponentKind ; :vssPath "Vehicle.Body.Windshield"; :kindPartOf :body.
+:powertrain a :ComponentKind ; :vssPath "Vehicle.Powertrain"; :kindPartOf :wholeVehicle.
+:battery a :ComponentKind ; :vssPath "Vehicle.Powertrain.Battery"; :kindPartOf :powertrain.
+:fuelSystem a :ComponentKind ; :vssPath "Vehicle.Powertrain.Fuelsystem"; :kindPartOf :powertrain.
+
+:isBrakeOn a :DynamicProperty; :vssPath "Vehicle.Body.Lights.IsBrakeOn" ; :propertyOf :lights.
+:fuelType a :StaticProperty; :vssPath "Vehicle.Powertrain.FuelSystem.FuelType" ; :propertyOf :fuelSystem.
+:instantConsumption a :DynamicProperty; :vssPath "Vehicle.Powertrain.FuelSystem.InstantConsumption" ; :propertyOf :fuelSystem.
+
+# ad-hoc axioms enforcing the consistency of the components hierarchies with the kind hierarchy
+[ a owl:Restriction; owl:onProperty :kind;   owl:hasValue :body ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :partOf; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :wholeVehicle ;
+]].
+[ a owl:Restriction; owl:onProperty :kind;   owl:hasValue :lights ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :partOf; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :body ;
+]].
+[ a owl:Restriction; owl:onProperty :kind;   owl:hasValue :windshield ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :partOf; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :body ;
+]].
+[ a owl:Restriction; owl:onProperty :kind;   owl:hasValue :powertrain ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :partOf; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :wholeVehicle ;
+]].
+[ a owl:Restriction; owl:onProperty :kind; owl:hasValue :battery ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :partOf; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :powertrain ;
+]].
+[ a owl:Restriction; owl:onProperty :kind; owl:hasValue :fuelSystem ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :partOf; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :powertrain ;
+]].
+
+
+
+# ad-hoc axioms enforcing the consistency of the property values with the properties
+[ a owl:Restriction; owl:onProperty :property; owl:hasValue :isBrakeOn ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :component; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :lights ;
+]].
+[ a owl:Restriction; owl:onProperty :property; owl:hasValue :fuelType ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :component; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :fuelSystem ;
+]].
+[ a owl:Restriction; owl:onProperty :property; owl:hasValue :instantConsumption ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :component; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :fuelSystem ;
+]].
+
+### Instances
+
+## verbose
+
+:v1 a :Vehicle.
+:v1b a :Component ; :partOf :v1 ; :kind :body.
+:v1bl a :Component ; :partOf :v1b ; :kind :lights.
+:v1blb a :PropertValue ; :component :v1bl ; :property :isBrakeOn; rdf:value "false"^^xsd:boolean.
+:v1p a :Component ; :partOf :v1 ; :kind :powertrain.
+:v1pf a :Component ; :partOf :v1p ; :kind :fuelSystem.
+:v1pft a :PropertyValue ; :component :v1pf ; :property :fuelType; rdf:value "diesel".
+
+# terse
+
+:v2 a :Vehicle.
+:v2blb :componentT :v2; :property :isBrakeOn; rdf:value "false"^^xsd:boolean.
+:v2pf1 :partOfT :v2.
+:v2pf1t :component :v2pf1; :property :fuelType; rdf:value "diesel".
+
+# other
+
+:v3 a :Vehicle.
+:v3b :partOf :v3.
+:v3bl :partOf :v3b.
+:v3blb :component :v3bl ; :property :isBrakeOn; rdf:value "false"^^xsd:boolean.
+:v3p :partOf :v3.
+:v3pf :partOf :v3p.
+:v3pft :component :v3pf ; :property :fuelType; rdf:value "diesel".
+
