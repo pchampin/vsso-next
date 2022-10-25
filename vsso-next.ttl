@@ -4,214 +4,79 @@
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#>.
 @prefix owl:  <http://www.w3.org/2002/07/owl#>.
 
-<> a owl:Ontology ; rdfs:label "VSSO Next".
+<> a owl:Ontology ;
+  rdfs:label "(a small part of) VSSO adapted to the new VSSO-Core" ;
+  owl:imports <./vsso-next-core.ttl>.
 
-:ComponentKind a owl:Class ;
-  owl:hasKey ( :vssPath ) ;
-.
+# instance-based hierarchy (ComponentKinds and Hierarchy)
 
-:kindPartOf a owl:ObjectProperty, owl:FunctionalProperty, owl:IrreflexiveProperty, owl:AsymmetricProperty ;
-  rdfs:subPropertyOf :kindPartOfT ;
-.
+:body a :ComponentKind ; :vssPath "Vehicle.Body"; :kindPartOf :wholeVehicle.
+:lights a :ComponentKind ; :vssPath "Vehicle.Body.Lights"; :kindPartOf :body.
+:windshield a :ComponentKind ; :vssPath "Vehicle.Body.Windshield"; :kindPartOf :body.
+:powertrain a :ComponentKind ; :vssPath "Vehicle.Powertrain"; :kindPartOf :wholeVehicle.
+:battery a :ComponentKind ; :vssPath "Vehicle.Powertrain.Battery"; :kindPartOf :powertrain.
+:fuelSystem a :ComponentKind ; :vssPath "Vehicle.Powertrain.Fuelsystem"; :kindPartOf :powertrain.
 
-:kindPartOfT a owl:ObjectProperty, owl:TransitiveProperty;
-  rdfs:domain :ComponentKind ;
-  rdfs:range :ComponentKind ;
-.
-
-:vssPath a owl:DatatypeProperty, owl:FunctionalProperty ;
-  #rdfs:domain :WithVssPath ;
-  rdfs:domain [ a owl:Class; owl:unionOf (:ComponentKind :Property) ];
-  rdfs:range xsd:string ;
-.
-
-:wholeVehicle a :ComponentKind ;
-  :vssPath "Vehicle";
-.
-
-# wholeVehicle is the only ComponentKind that is not part of anything
-[
-  owl:oneOf ( :wholeVehicle )
-] owl:equivalentClass [
-  a owl:Class ;
-  owl:intersectionOf (
-    :ComponentKind
-    [ a owl:Restriction ;
-      owl:onProperty :kindPartOf ;
-      owl:cardinality 0 ;
-    ]
-  )
-].
-
-# any component must be, directly or indirectly, part of a vehicle
-:ComponentKind rdfs:subClassOf [
-  a owl:Restriction ;
-  owl:onProperty :kindPartOfT ;
-  owl:hasValue :wholeVehicle ;
-].
-
-# any component kind is directly or indirectly a part of wholeVehicle
-:ComponentKind rdfs:subClassOf [
-  owl:unionOf (
-    [ owl:oneOf ( :wholeVehicle ) ]
-    [ a owl:Restriction ;
-      owl:onProperty :kindPartOfT ;
-      owl:hasValue :wholeVehicle ;
-    ]
-  )
-].
-
-:Property a owl:Class ;
-  owl:hasKey ( :vssPath ) ;
-.
-
-:StaticProperty a owl:Class ;
-  rdfs:subClassOf :Property ;
-.
-
-:DynamicProperty a owl:Class ;
-  rdfs:subClassOf :Property ;
-.
-
-:propertyOf a owl:ObjectProperty ;
-  rdfs:domain :Property ;
-  rdfs:range :ComponentKind ;
-.
-    
-
-:Component a owl:Class.
-
-:kind a owl:ObjectProperty, owl:FunctionalProperty ;
-  rdfs:domain :Component ;
-  rdfs:range :ComponentKind ;
-.
-
-:position a owl:ObjectProperty, owl:FunctionalProperty ;
-  rdfs:domain :Component ;
-  rdfs:range :ComponentPosition ;
-.
-
-:ComponentPosition a owl:Class.
-# subclasses or specific instances of :ComponentPosition could be defined,
-# with constraints of the kind "position of a component of kind Seat must be a SeatPosition"
-
-:Vehicle a owl:Class ;
-  owl:equivalentClass [
-    owl:intersectionOf (
-      :Component
-      [ a owl:Restriction ;
-        owl:onProperty :kind ;
-        owl:hasValue :wholeVehicle ;
-      ]
-    );
-  ];
-.
-
-:partOf a owl:ObjectProperty, owl:FunctionalProperty, owl:IrreflexiveProperty, owl:AsymmetricProperty ;
-  rdfs:subPropertyOf :partOfT, :partOf ;
-  owl:inverseOf :part ;
-.
-
-:partOfT a owl:ObjectProperty, owl:TransitiveProperty ;
-  rdfs:domain :Component ;
-  rdfs:range :Component ;
-.
-
-# any component is directly or indirectly a part of a vehicle
-:Component rdfs:subClassOf [
-  owl:unionOf (
-    :Vehicle
-    [ a owl:Restriction ;
-      owl:onProperty :partOfT ;
-      owl:someValuesFrom :Vehicle ;
-    ]
-  )
-].
+:isBrakeOn a :DynamicProperty; :vssPath "Vehicle.Body.Lights.IsBrakeOn" ; :propertyOf :lights.
+:fuelType a :StaticProperty; :vssPath "Vehicle.Powertrain.FuelSystem.FuelType" ; :propertyOf :fuelSystem.
+:instantConsumption a :DynamicProperty; :vssPath "Vehicle.Powertrain.FuelSystem.InstantConsumption" ; :propertyOf :fuelSystem.
 
 
-:PropertyValue a owl:Class ;
-  rdfs:subClassOf
-    [ a owl:Restriction; owl:onProperty :component; owl:cardinality 1 ],
-    [ a owl:Restriction; owl:onProperty :property; owl:cardinality 1 ];
-.
+# ad-hoc axioms enforcing the consistency of the components hierarchies with the kind hierarchy
+
+[ a owl:Restriction; owl:onProperty :kind;   owl:hasValue :body ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :partOf; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :wholeVehicle ;
+]].
+
+[ a owl:Restriction; owl:onProperty :kind;   owl:hasValue :lights ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :partOf; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :body ;
+]].
+
+[ a owl:Restriction; owl:onProperty :kind;   owl:hasValue :windshield ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :partOf; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :body ;
+]].
+
+[ a owl:Restriction; owl:onProperty :kind;   owl:hasValue :powertrain ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :partOf; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :wholeVehicle ;
+]].
+
+[ a owl:Restriction; owl:onProperty :kind; owl:hasValue :battery ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :partOf; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :powertrain ;
+]].
+
+[ a owl:Restriction; owl:onProperty :kind; owl:hasValue :fuelSystem ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :partOf; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :powertrain ;
+]].
 
 
-:component a owl:ObjectProperty ;
-  rdfs:domain :PropertyValue ;
-  rdfs:range :Component ;
-  owl:inverseOf :propertyValue ;
-  rdfs:subPropertyOf :componentT ;
-.
+# ad-hoc axioms enforcing the consistency of the property values with the properties
 
-:componentT a owl:ObjectProperty ;
-  owl:propertyChainAxiom (
-    :component
-    :partOfT
-  ) ;
-.
+[ a owl:Restriction; owl:onProperty :property; owl:hasValue :isBrakeOn ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :component; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :lights ;
+]].
 
-:property a owl:ObjectProperty ;
-  rdfs:domain :PropertyValue ;
-  rdfs:range :Property ;
-.
+[ a owl:Restriction; owl:onProperty :property; owl:hasValue :fuelType ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :component; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :fuelSystem ;
+]].
 
-
-
-[] a owl:AllDisjointClasses ;
-  owl:members (:ComponentKind :ComponentPosition :Property :Component :PropertyValue).
-
-
-#### the component hierarchy must match the component kind hierarchy ;
-
-#:kindPartOf a owl:ObjectProperty, owl:ReflexiveProperty ;
-#  owl:propertyChainAxiom (
-#    [ owl:inverseOf :kind ]
-#    [ owl:inverseOf :partOf ]
-#    :kind
-#  );
-#.
-
-## NB: the axiom above makes the ontology OWL-Full,
-##     so it is commented out for the sake of Hermit.
-## As an alternative, the following N3 rule can be used,
-## to generate ad-hoc OWL-DL axioms for every :kindPartOf assertion.
-
-#{ ?x :kindPartOf ?y }
-# =>
-#{
-#  [ a owl:Restriction; owl:onProperty :kind;   owl:hasValue :?x ]
-#  rdfs:subClassOf
-#  [ a owl:Restriction; owl:onProperty :partOf; owl:allValuesFrom [
-#    a owl:Restriction; owl:onProperty :kind;   owl:hasValue ?y ;
-#  ]].
-#}
-
-# NB: I have to check that, but potentially,
-# the ad-hoc axioms are even more powerful,
-# because they allow use to infer the kind of the "parent" componet.
-
-
-#####  a component's property values must match the properties of its kind
-
-#:propertyOf owl:propertyChainAxiom (
-#    [ owl:inverseOf :property ]
-#    :component
-#    :kind
-#  );
-#.
-
-## NB: the axiom above makes the ontology OWL-Full,
-##     so it is commented out for the sake of Hermit.
-## As an alternative, the following N3 rule can be used,
-## to generate ad-hoc OWL-DL axioms for every :kindPartOf assertion.
-
-#{ ?x :propertyOf ?y }
-# =>
-#{
-#  [ a owl:Restriction; owl:onProperty :property;  owl:hasValue :?x ]
-#  rdfs:subClassOf
-#  [ a owl:Restriction; owl:onProperty :component; owl:allValuesFrom [
-#    a owl:Restriction; owl:onProperty :kind;      owl:hasValue ?y ;
-#  ]].
-#}
-
+[ a owl:Restriction; owl:onProperty :property; owl:hasValue :instantConsumption ]
+rdfs:subClassOf
+[ a owl:Restriction; owl:onProperty :component; owl:allValuesFrom [
+  a owl:Restriction; owl:onProperty :kind;   owl:hasValue :fuelSystem ;
+]].
