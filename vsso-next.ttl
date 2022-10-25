@@ -25,10 +25,6 @@
   rdfs:range xsd:string ;
 .
 
-# dummy class, to test in Protégé that the domain of vssPath is correctly identified
-# (for some reason, the union is not displayed...)
-#<#WithVssPath> a owl:Class; owl:unionOf (:ComponentKind :Property).
-
 :wholeVehicle a :ComponentKind ;
   :vssPath "Vehicle";
 .
@@ -45,6 +41,13 @@
       owl:cardinality 0 ;
     ]
   )
+].
+
+# any component must be, directly or indirectly, part of a vehicle
+:ComponentKind rdfs:subClassOf [
+  a owl:Restriction ;
+  owl:onProperty :kindPartOfT ;
+  owl:hasValue :wholeVehicle ;
 ].
 
 # any component kind is directly or indirectly a part of wholeVehicle
